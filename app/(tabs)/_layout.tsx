@@ -30,7 +30,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="home" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -44,7 +44,7 @@ export default function TabLayout() {
         name="compare"
         options={{
           title: 'Compare',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="compare" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="bar-chart" color={color} />,
         }}
       />
       <Tabs.Screen
