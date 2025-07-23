@@ -1,3 +1,4 @@
+
 // Fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -18,6 +19,34 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'search': 'search',
+  'compare': 'compare-arrows',
+  'person': 'person',
+  'filter': 'filter-list',
+  'location': 'location-on',
+  'star': 'star',
+  'code': 'code',
+  'briefcase': 'work',
+  'heart': 'favorite',
+  'book': 'menu-book',
+  'calculator': 'calculate',
+  'trophy': 'emoji-events',
+  'rupee': 'currency-rupee',
+  'people': 'people',
+  'target': 'gps-fixed',
+  'plus': 'add',
+  'close': 'close',
+  'download': 'download',
+  'share': 'share',
+  'bookmark': 'bookmark',
+  'calendar': 'calendar-today',
+  'bell': 'notifications',
+  'history': 'history',
+  'settings': 'settings',
+  'edit': 'edit',
+  'help': 'help',
+  'mail': 'email',
+  'logout': 'logout',
 } as IconMapping;
 
 /**
