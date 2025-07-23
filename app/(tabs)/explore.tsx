@@ -1,416 +1,450 @@
 
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, FlatList, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  TouchableOpacity,
+  TextInput,
+  Image,
+} from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { mockColleges } from '@/data/mock-data';
+import { Link } from 'expo-router';
 
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  course: string;
-  fees: string;
-  rank: string;
-  rating: number;
-  placement: string;
-  logo: string;
-}
-
-export default function ExploreScreen() {
-  const [selectedCourse, setSelectedCourse] = useState('All');
-  const [selectedLocation, setSelectedLocation] = useState('All');
+export default function SearchScreen() {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const [searchText, setSearchText] = useState('');
   const [sortBy, setSortBy] = useState('rank');
+  const [compareList, setCompareList] = useState<any[]>([]);
 
-  const courses = ['All', 'Engineering', 'MBA', 'Medical', 'Arts & Science'];
-  const locations = ['All', 'Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Pune'];
+  const styles = createStyles(colors);
 
-  const colleges: College[] = [
-    {
-      id: 1,
-      name: 'IIT Delhi',
-      location: 'Delhi',
-      course: 'Engineering',
-      fees: '₹2.5L/year',
-      rank: '#1',
-      rating: 4.8,
-      placement: '₹25L avg',
-      logo: 'IIT'
-    },
-    {
-      id: 2,
-      name: 'IIM Bangalore',
-      location: 'Bangalore',
-      course: 'MBA',
-      fees: '₹24L total',
-      rank: '#2',
-      rating: 4.9,
-      placement: '₹35L avg',
-      logo: 'IIM'
-    },
-    {
-      id: 3,
-      name: 'AIIMS Delhi',
-      location: 'Delhi',
-      course: 'Medical',
-      fees: '₹1.2L/year',
-      rank: '#1',
-      rating: 4.9,
-      placement: 'N/A',
-      logo: 'AII'
-    },
-    {
-      id: 4,
-      name: 'BITS Pilani',
-      location: 'Pilani',
-      course: 'Engineering',
-      fees: '₹4.5L/year',
-      rank: '#8',
-      rating: 4.6,
-      placement: '₹18L avg',
-      logo: 'BIT'
-    },
-  ];
-
-  const renderCollegeCard = ({ item }: { item: College }) => (
-    <TouchableOpacity style={styles.collegeCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.logoContainer}>
-          <ThemedText style={styles.logoText}>{item.logo}</ThemedText>
-        </View>
-        <View style={styles.rankBadge}>
-          <ThemedText style={styles.rankText}>{item.rank}</ThemedText>
-        </View>
-      </View>
-      
-      <ThemedText type="defaultSemiBold" style={styles.collegeName}>
-        {item.name}
-      </ThemedText>
-      
-      <View style={styles.locationRow}>
-        <IconSymbol name="location" size={14} color="#666" />
-        <ThemedText style={styles.locationText}>{item.location}</ThemedText>
-      </View>
-
-      <View style={styles.statsRow}>
-        <View style={styles.statItem}>
-          <ThemedText style={styles.statLabel}>Course</ThemedText>
-          <ThemedText style={styles.statValue}>{item.course}</ThemedText>
-        </View>
-        <View style={styles.statItem}>
-          <ThemedText style={styles.statLabel}>Fees</ThemedText>
-          <ThemedText style={styles.statValue}>{item.fees}</ThemedText>
-        </View>
-      </View>
-
-      <View style={styles.cardFooter}>
-        <View style={styles.ratingContainer}>
-          <IconSymbol name="star" size={14} color="#FFD700" />
-          <ThemedText style={styles.ratingText}>{item.rating}</ThemedText>
-        </View>
-        <ThemedText style={styles.placementText}>{item.placement}</ThemedText>
-      </View>
-    </TouchableOpacity>
+  const filteredColleges = mockColleges.filter(college =>
+    college.name.toLowerCase().includes(searchText.toLowerCase()) ||
+    college.location.toLowerCase().includes(searchText.toLowerCase())
   );
+
+  const sortedColleges = [...filteredColleges].sort((a, b) => {
+    switch (sortBy) {
+      case 'rank':
+        return parseInt(a.overallRank) - parseInt(b.overallRank);
+      case 'fees':
+        return parseFloat(a.fees) - parseFloat(b.fees);
+      case 'rating':
+        return parseFloat(b.rating) - parseFloat(a.rating);
+      case 'name':
+        return a.name.localeCompare(b.name);
+      default:
+        return 0;
+    }
+  });
+
+  const formatFees = (fees: string, period: string) => {
+    const amount = parseFloat(fees);
+    if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(1)}L${period === "total" ? " total" : "/year"}`;
+    }
+    return `₹${amount.toLocaleString()}${period === "total" ? " total" : "/year"}`;
+  };
+
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <Text key={i} style={[styles.star, { color: i <= rating ? '#FFD700' : '#E0E0E0' }]}>
+          ★
+        </Text>
+      );
+    }
+    return stars;
+  };
 
   return (
-    <ThemedView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
-      <ThemedView style={styles.header}>
-        <ThemedText type="title" style={styles.headerTitle}>Explore Colleges</ThemedText>
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Search Colleges</Text>
+        </View>
+      </View>
+
+      {/* Search Input */}
+      <View style={styles.searchContainer}>
+        <IconSymbol name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search colleges, courses, locations..."
+          placeholderTextColor="#9CA3AF"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+      </View>
+
+      {/* Controls */}
+      <View style={styles.controlsContainer}>
+        <View style={styles.sortContainer}>
+          <Text style={styles.sortLabel}>Sort by:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {[
+              { key: 'rank', label: 'Rank' },
+              { key: 'fees', label: 'Fees' },
+              { key: 'rating', label: 'Rating' },
+              { key: 'name', label: 'Name' }
+            ].map((option) => (
+              <TouchableOpacity
+                key={option.key}
+                style={[
+                  styles.sortButton,
+                  sortBy === option.key && styles.selectedSortButton
+                ]}
+                onPress={() => setSortBy(option.key)}
+              >
+                <Text
+                  style={[
+                    styles.sortButtonText,
+                    sortBy === option.key && styles.selectedSortButtonText
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
         <TouchableOpacity style={styles.filterButton}>
-          <IconSymbol name="filter" size={20} color="#4ECDC4" />
+          <IconSymbol name="sliders-horizontal" size={16} color="#4A90E2" />
+          <Text style={styles.filterButtonText}>Filters</Text>
         </TouchableOpacity>
-      </ThemedView>
+      </View>
 
-      {/* Course Filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-        {courses.map((course) => (
-          <TouchableOpacity
-            key={course}
-            style={[
-              styles.filterTab,
-              selectedCourse === course && styles.filterTabActive
-            ]}
-            onPress={() => setSelectedCourse(course)}
-          >
-            <ThemedText style={[
-              styles.filterTabText,
-              selectedCourse === course && styles.filterTabTextActive
-            ]}>
-              {course}
-            </ThemedText>
-          </TouchableOpacity>
-        ))}
+      {/* Results Count */}
+      <View style={styles.resultsHeader}>
+        <Text style={styles.resultsCount}>
+          {sortedColleges.length} colleges found
+        </Text>
+      </View>
+
+      {/* College Results */}
+      <ScrollView style={styles.resultsContainer} showsVerticalScrollIndicator={false}>
+        {sortedColleges.length === 0 ? (
+          <View style={styles.emptyState}>
+            <IconSymbol name="search" size={48} color="#E0E0E0" />
+            <Text style={styles.emptyStateTitle}>No colleges found</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              Try adjusting your search criteria
+            </Text>
+          </View>
+        ) : (
+          sortedColleges.map((college) => (
+            <View key={college.id} style={styles.collegeCard}>
+              <Image
+                source={{ uri: college.imageUrl }}
+                style={styles.collegeImage}
+                resizeMode="cover"
+              />
+              <View style={styles.rankBadge}>
+                <Text style={styles.rankText}>#{college.overallRank}</Text>
+              </View>
+              
+              <View style={styles.collegeInfo}>
+                <Text style={styles.collegeName} numberOfLines={2}>
+                  {college.name}
+                </Text>
+                
+                <View style={styles.collegeLocation}>
+                  <IconSymbol name="location" size={14} color="#666" />
+                  <Text style={styles.locationText}>{college.location}</Text>
+                </View>
+                
+                <View style={styles.ratingContainer}>
+                  <View style={styles.stars}>
+                    {renderStars(parseFloat(college.rating))}
+                  </View>
+                  <Text style={styles.ratingText}>
+                    {college.rating} ({college.reviewCount?.toLocaleString()} reviews)
+                  </Text>
+                </View>
+                
+                <View style={styles.collegeDetails}>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Fees</Text>
+                    <Text style={styles.detailValue}>
+                      {formatFees(college.fees, college.feesPeriod)}
+                    </Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Type</Text>
+                    <Text style={styles.detailValue}>{college.type}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Placement</Text>
+                    <Text style={styles.detailValue}>{college.placementRate}%</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.cardActions}>
+                  <Link
+                    href={{
+                      pathname: '/college-details',
+                      params: { id: college.id }
+                    }}
+                    asChild
+                  >
+                    <TouchableOpacity style={styles.viewDetailsButton}>
+                      <Text style={styles.viewDetailsText}>View Details</Text>
+                    </TouchableOpacity>
+                  </Link>
+                  
+                  <TouchableOpacity style={styles.compareButton}>
+                    <IconSymbol name="plus" size={16} color="#4A90E2" />
+                    <Text style={styles.compareText}>Compare</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ))
+        )}
       </ScrollView>
-
-      {/* Location Filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-        {locations.map((location) => (
-          <TouchableOpacity
-            key={location}
-            style={[
-              styles.locationTab,
-              selectedLocation === location && styles.locationTabActive
-            ]}
-            onPress={() => setSelectedLocation(location)}
-          >
-            <ThemedText style={[
-              styles.locationTabText,
-              selectedLocation === location && styles.locationTabTextActive
-            ]}>
-              {location}
-            </ThemedText>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Sort Options */}
-      <ThemedView style={styles.sortContainer}>
-        <ThemedText style={styles.sortLabel}>Sort by:</ThemedText>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {['rank', 'fees', 'rating', 'placement'].map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={[
-                styles.sortOption,
-                sortBy === option && styles.sortOptionActive
-              ]}
-              onPress={() => setSortBy(option)}
-            >
-              <ThemedText style={[
-                styles.sortOptionText,
-                sortBy === option && styles.sortOptionTextActive
-              ]}>
-                {option.charAt(0).toUpperCase() + option.slice(1)}
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </ThemedView>
-
-      {/* Results */}
-      <ThemedView style={styles.resultsHeader}>
-        <ThemedText style={styles.resultsCount}>{colleges.length} colleges found</ThemedText>
-        <TouchableOpacity>
-          <IconSymbol name="compare" size={20} color="#4ECDC4" />
-        </TouchableOpacity>
-      </ThemedView>
-
-      <FlatList
-        data={colleges}
-        renderItem={renderCollegeCard}
-        keyExtractor={(item) => item.id.toString()}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
-      />
-    </ThemedView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.backgroundGray,
   },
   header: {
+    backgroundColor: colors.primary,
+    paddingBottom: 16,
+  },
+  headerContent: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 12,
+    color: colors.text,
+  },
+  controlsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 40,
-    backgroundColor: 'white',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  filterButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-  },
-  filterScroll: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  filterTab: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    marginRight: 10,
-    borderRadius: 20,
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  filterTabActive: {
-    backgroundColor: '#4ECDC4',
-    borderColor: '#4ECDC4',
-  },
-  filterTabText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  filterTabTextActive: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  locationTab: {
     paddingHorizontal: 16,
-    paddingVertical: 6,
-    marginRight: 8,
-    borderRadius: 15,
-    backgroundColor: '#f0f0f0',
-  },
-  locationTabActive: {
-    backgroundColor: '#FF6B6B',
-  },
-  locationTabText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  locationTabTextActive: {
-    color: 'white',
-    fontWeight: '600',
+    marginBottom: 16,
   },
   sortContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: 'white',
-    marginBottom: 10,
+    flex: 1,
   },
   sortLabel: {
     fontSize: 14,
     color: '#666',
-    marginRight: 15,
+    marginRight: 8,
   },
-  sortOption: {
+  sortButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: 'white',
     marginRight: 8,
-    borderRadius: 12,
-    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
-  sortOptionActive: {
-    backgroundColor: '#4ECDC4',
+  selectedSortButton: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  sortOptionText: {
-    fontSize: 12,
+  sortButtonText: {
+    fontSize: 14,
     color: '#666',
   },
-  sortOptionTextActive: {
+  selectedSortButtonText: {
     color: 'white',
-    fontWeight: '600',
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  filterButtonText: {
+    color: '#4A90E2',
+    fontSize: 14,
+    marginLeft: 4,
   },
   resultsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   resultsCount: {
     fontSize: 14,
     color: '#666',
   },
-  listContainer: {
-    paddingHorizontal: 20,
+  resultsContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
   collegeCard: {
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 15,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
+    overflow: 'hidden',
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  logoContainer: {
-    width: 50,
-    height: 50,
-    backgroundColor: '#4ECDC4',
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
+  collegeImage: {
+    width: '100%',
+    height: 128,
   },
   rankBadge: {
-    backgroundColor: '#FF6B6B',
-    paddingHorizontal: 12,
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
   rankText: {
-    color: 'white',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#333',
+  },
+  collegeInfo: {
+    padding: 16,
   },
   collegeName: {
-    fontSize: 18,
-    color: '#333',
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.text,
     marginBottom: 8,
   },
-  locationRow: {
+  collegeLocation: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   locationText: {
     fontSize: 14,
     color: '#666',
     marginLeft: 4,
   },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  statItem: {
-    flex: 1,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 2,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
+  },
+  stars: {
+    flexDirection: 'row',
+    marginRight: 8,
+  },
+  star: {
+    fontSize: 14,
   },
   ratingText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  collegeDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  detailItem: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+  },
+  detailValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
-    marginLeft: 4,
+    color: colors.text,
   },
-  placementText: {
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  viewDetailsButton: {
+    flex: 1,
+    marginRight: 8,
+  },
+  viewDetailsText: {
+    color: '#4A90E2',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  compareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#4A90E2',
+  },
+  compareText: {
+    color: '#4A90E2',
     fontSize: 12,
-    color: '#4ECDC4',
-    fontWeight: '600',
+    marginLeft: 4,
   },
 });

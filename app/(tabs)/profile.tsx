@@ -1,275 +1,375 @@
 
-import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  TouchableOpacity,
+  Alert,
+  Switch,
+} from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function ProfileScreen() {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  const styles = createStyles(colors);
+
   const menuItems = [
-    { id: 1, title: 'Saved Colleges', subtitle: '12 colleges saved', icon: 'bookmark', color: '#FF6B6B' },
-    { id: 2, title: 'Exam Calendar', subtitle: 'Upcoming exam dates', icon: 'calendar', color: '#4ECDC4' },
-    { id: 3, title: 'College Predictor', subtitle: 'Find colleges based on your score', icon: 'target', color: '#45B7D1' },
-    { id: 4, title: 'Admission Alerts', subtitle: 'Get notified about deadlines', icon: 'bell', color: '#96CEB4' },
-    { id: 5, title: 'Compare History', subtitle: 'View past comparisons', icon: 'history', color: '#FECA57' },
-    { id: 6, title: 'Settings', subtitle: 'App preferences', icon: 'settings', color: '#6C5CE7' },
+    { icon: 'heart', label: 'Favorite Colleges', count: 5 },
+    { icon: 'history', label: 'Search History', count: null },
+    { icon: 'settings', label: 'Settings', count: null },
+    { icon: 'notifications', label: 'Notifications', count: null, hasSwitch: true },
+    { icon: 'help-circle', label: 'Help & Support', count: null },
   ];
 
-  const stats = [
-    { label: 'Colleges Viewed', value: '45' },
-    { label: 'Comparisons Made', value: '8' },
-    { label: 'Saved Colleges', value: '12' },
-  ];
+  const handleMenuPress = (item: any) => {
+    if (item.label === 'Help & Support') {
+      Alert.alert('Help & Support', 'Contact us at support@collegeduniya.com');
+    } else {
+      Alert.alert('Coming Soon', `${item.label} feature will be available soon.`);
+    }
+  };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Out', style: 'destructive', onPress: () => {
+          Alert.alert('Signed Out', 'You have been signed out successfully.');
+        }},
+      ]
+    );
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Profile Header */}
-      <ThemedView style={styles.profileHeader}>
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <ThemedText style={styles.avatarText}>S</ThemedText>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* User Profile Section */}
+        <View style={styles.profileCard}>
+          <View style={styles.profileHeader}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>JD</Text>
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>John Doe</Text>
+              <Text style={styles.profileEmail}>johndoe@example.com</Text>
+              <Text style={styles.profileRole}>JEE Aspirant 2024</Text>
+            </View>
           </View>
-          <TouchableOpacity style={styles.editButton}>
-            <IconSymbol name="edit" size={14} color="white" />
+          <TouchableOpacity style={styles.editProfileButton}>
+            <Text style={styles.editProfileButtonText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
-        <ThemedText type="title" style={styles.userName}>Student Name</ThemedText>
-        <ThemedText style={styles.userEmail}>student@example.com</ThemedText>
-        
-        {/* Stats */}
+
+        {/* Quick Stats */}
         <View style={styles.statsContainer}>
-          {stats.map((stat, index) => (
-            <View key={index} style={styles.statItem}>
-              <ThemedText style={styles.statValue}>{stat.value}</ThemedText>
-              <ThemedText style={styles.statLabel}>{stat.label}</ThemedText>
-            </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>12</Text>
+            <Text style={styles.statLabel}>Colleges Viewed</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={[styles.statValue, { color: colors.secondary }]}>5</Text>
+            <Text style={styles.statLabel}>Favorites</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={[styles.statValue, { color: colors.accent }]}>3</Text>
+            <Text style={styles.statLabel}>Comparisons</Text>
+          </View>
+        </View>
+
+        {/* Preferences Card */}
+        <View style={styles.preferencesCard}>
+          <Text style={styles.preferencesTitle}>Your Preferences</Text>
+          <View style={styles.preferenceItem}>
+            <Text style={styles.preferenceLabel}>Interested Courses:</Text>
+            <Text style={styles.preferenceValue}>Engineering, MBA</Text>
+          </View>
+          <View style={styles.preferenceItem}>
+            <Text style={styles.preferenceLabel}>Preferred Locations:</Text>
+            <Text style={styles.preferenceValue}>Delhi, Mumbai, Bangalore</Text>
+          </View>
+          <View style={styles.preferenceItem}>
+            <Text style={styles.preferenceLabel}>Budget Range:</Text>
+            <Text style={styles.preferenceValue}>₹2L - ₹10L per year</Text>
+          </View>
+        </View>
+
+        {/* Menu Items */}
+        <View style={styles.menuContainer}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.menuItem}
+              onPress={() => handleMenuPress(item)}
+            >
+              <View style={styles.menuItemLeft}>
+                <IconSymbol name={item.icon as any} size={20} color="#666" />
+                <Text style={styles.menuItemLabel}>{item.label}</Text>
+              </View>
+              <View style={styles.menuItemRight}>
+                {item.count && (
+                  <View style={styles.countBadge}>
+                    <Text style={styles.countBadgeText}>{item.count}</Text>
+                  </View>
+                )}
+                {item.hasSwitch ? (
+                  <Switch
+                    value={notificationsEnabled}
+                    onValueChange={setNotificationsEnabled}
+                    trackColor={{ false: '#E0E0E0', true: colors.primary }}
+                    thumbColor={notificationsEnabled ? 'white' : '#f4f3f4'}
+                  />
+                ) : (
+                  <IconSymbol name="chevron-right" size={16} color="#ccc" />
+                )}
+              </View>
+            </TouchableOpacity>
           ))}
         </View>
-      </ThemedView>
 
-      {/* Quick Actions */}
-      <ThemedView style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>Quick Actions</ThemedText>
-        <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.quickActionCard}>
-            <IconSymbol name="search" size={24} color="#4ECDC4" />
-            <ThemedText style={styles.quickActionText}>Find Colleges</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickActionCard}>
-            <IconSymbol name="calculator" size={24} color="#FF6B6B" />
-            <ThemedText style={styles.quickActionText}>Predict Colleges</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickActionCard}>
-            <IconSymbol name="compare" size={24} color="#45B7D1" />
-            <ThemedText style={styles.quickActionText}>Compare</ThemedText>
-          </TouchableOpacity>
+        {/* Sign Out */}
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <IconSymbol name="log-out" size={20} color="#EF4444" />
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </TouchableOpacity>
+
+        {/* App Version */}
+        <View style={styles.versionContainer}>
+          <Text style={styles.versionText}>College Duniya v1.0.0</Text>
         </View>
-      </ThemedView>
-
-      {/* Menu Items */}
-      <ThemedView style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>My Account</ThemedText>
-        {menuItems.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.menuItem}>
-            <View style={[styles.menuIcon, { backgroundColor: item.color }]}>
-              <IconSymbol name={item.icon as any} size={20} color="white" />
-            </View>
-            <View style={styles.menuContent}>
-              <ThemedText style={styles.menuTitle}>{item.title}</ThemedText>
-              <ThemedText style={styles.menuSubtitle}>{item.subtitle}</ThemedText>
-            </View>
-            <IconSymbol name="chevron.right" size={16} color="#ccc" />
-          </TouchableOpacity>
-        ))}
-      </ThemedView>
-
-      {/* Support Section */}
-      <ThemedView style={styles.section}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>Support</ThemedText>
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={[styles.menuIcon, { backgroundColor: '#95A5A6' }]}>
-            <IconSymbol name="help" size={20} color="white" />
-          </View>
-          <View style={styles.menuContent}>
-            <ThemedText style={styles.menuTitle}>Help & FAQ</ThemedText>
-            <ThemedText style={styles.menuSubtitle}>Get answers to common questions</ThemedText>
-          </View>
-          <IconSymbol name="chevron.right" size={16} color="#ccc" />
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={[styles.menuIcon, { backgroundColor: '#E74C3C' }]}>
-            <IconSymbol name="mail" size={20} color="white" />
-          </View>
-          <View style={styles.menuContent}>
-            <ThemedText style={styles.menuTitle}>Contact Us</ThemedText>
-            <ThemedText style={styles.menuSubtitle}>Send us your feedback</ThemedText>
-          </View>
-          <IconSymbol name="chevron.right" size={16} color="#ccc" />
-        </TouchableOpacity>
-      </ThemedView>
-
-      {/* Logout */}
-      <ThemedView style={styles.section}>
-        <TouchableOpacity style={styles.logoutButton}>
-          <IconSymbol name="logout" size={20} color="#E74C3C" />
-          <ThemedText style={styles.logoutText}>Logout</ThemedText>
-        </TouchableOpacity>
-      </ThemedView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.backgroundGray,
   },
-  profileHeader: {
-    alignItems: 'center',
-    padding: 30,
-    paddingTop: 50,
-    backgroundColor: 'white',
+  header: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: 15,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    backgroundColor: '#4ECDC4',
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
+  headerTitle: {
     color: 'white',
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  editButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 28,
-    height: 28,
-    backgroundColor: '#FF6B6B',
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'white',
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  userEmail: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 25,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  section: {
-    padding: 20,
-    paddingTop: 10,
-  },
-  sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 15,
   },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  content: {
+    flex: 1,
+    padding: 16,
   },
-  quickActionCard: {
+  profileCard: {
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    width: '30%',
+    padding: 16,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
-  quickActionText: {
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  avatarText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  profileEmail: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 2,
+  },
+  profileRole: {
+    fontSize: 14,
+    color: '#666',
+  },
+  editProfileButton: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  editProfileButtonText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  statLabel: {
     fontSize: 12,
-    color: '#333',
-    marginTop: 8,
+    color: '#666',
     textAlign: 'center',
+  },
+  preferencesCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  preferencesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  preferenceItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  preferenceLabel: {
+    fontSize: 14,
+    color: '#666',
+    flex: 1,
+  },
+  preferenceValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+    flex: 1,
+    textAlign: 'right',
+  },
+  menuContainer: {
+    marginBottom: 16,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: 'white',
-    padding: 15,
     borderRadius: 12,
-    marginBottom: 10,
+    padding: 16,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 1,
+    elevation: 2,
   },
-  menuIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 15,
-  },
-  menuContent: {
-    flex: 1,
-  },
-  menuTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 2,
-  },
-  menuSubtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  logoutButton: {
+  menuItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E74C3C',
+    flex: 1,
   },
-  logoutText: {
-    color: '#E74C3C',
+  menuItemLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+    fontWeight: '500',
+    color: colors.text,
+    marginLeft: 12,
+  },
+  menuItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  countBadge: {
+    backgroundColor: colors.backgroundGray,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginRight: 8,
+  },
+  countBadgeText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  signOutText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#EF4444',
+    marginLeft: 12,
+  },
+  versionContainer: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  versionText: {
+    fontSize: 12,
+    color: '#999',
   },
 });
